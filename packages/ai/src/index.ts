@@ -1,11 +1,11 @@
 // AI Clients (Gemini-backed)
-export { callClaude, callClaudeJSON, CLAUDE_MODEL } from "./claude";
+export { callClaude, callClaudeJSON, CLAUDE_MODEL } from "./gemini";
 export {
   generateEmbedding,
   generateEmbeddings,
   EMBEDDING_MODEL,
   EMBEDDING_DIMENSIONS,
-} from "./openai";
+} from "./embeddings";
 
 // Prompts
 export {
@@ -39,3 +39,12 @@ export {
   CHAT_AGENT_SYSTEM_PROMPT,
   CHAT_TOOL_DESCRIPTIONS,
 } from "./prompts/chat-agent.v1";
+
+// Chat Agent
+export { runChatAgent } from "./agents/chat-agent";
+export type {
+  ChatToolImplementations,
+  ChatHistoryMessage,
+  RunChatAgentParams,
+  ChatAgentResult,
+} from "./agents/chat-agent";

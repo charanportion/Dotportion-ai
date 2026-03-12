@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "@google/genai": "^1.0.0",
+    "@langchain/core": "^1.1.32",
+    "@langchain/google-genai": "^2.1.25",
+    "@langchain/langgraph": "^1.2.2",
     "zod": "^3.23.0"
   },
   "devDependencies": {
