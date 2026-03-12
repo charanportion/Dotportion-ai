@@ -14,6 +14,7 @@
     "@fastify/cors": "^10.0.0",
     "@fastify/multipart": "^8.3.0",
     "@repo/ai": "workspace:*",
+    "@repo/context-engine": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/insight-engine": "workspace:*",
     "bullmq": "^5.12.0",

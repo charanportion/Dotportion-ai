@@ -5,6 +5,7 @@ config({ path: resolve(__dirname, "../../../.env") });
 config({ path: resolve(__dirname, "../.env") });
 import { prisma } from "@repo/db";
 import { startAnalysisWorker } from "./workers/analysis.worker";
+import { startContextSyncWorker } from "./workers/context-sync.worker";
 
 async function main() {
   console.log("[Worker] Starting workers...");
@@ -15,11 +16,13 @@ async function main() {
 
   // Start workers
   const analysisWorker = startAnalysisWorker();
+  const contextSyncWorker = startContextSyncWorker();
 
   // Graceful shutdown
   const shutdown = async () => {
     console.log("[Worker] Shutting down...");
     await analysisWorker.close();
+    await contextSyncWorker.close();
     await prisma.$disconnect();
     process.exit(0);
   };

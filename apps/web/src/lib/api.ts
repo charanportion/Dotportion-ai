@@ -21,7 +21,7 @@ async function fetchWithAuth(
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
       Authorization: `Bearer ${token}`,
       ...options.headers,
     },
@@ -97,6 +97,21 @@ export function createAPIClient(token: string) {
       }),
     getChatHistory: (projectId: string) =>
       req<{ messages: any[] }>(`/chat/${projectId}/history`),
+
+    // Integrations
+    getIntegrations: (projectId: string) =>
+      req<any[]>(`/integrations/${projectId}`),
+    createIntegration: (data: { projectId: string; type: string; credentials: any }) =>
+      req<any>("/integrations", { method: "POST", body: JSON.stringify(data) }),
+    deleteIntegration: (id: string) =>
+      fetchWithAuth(`/integrations/${id}`, token, { method: "DELETE" }),
+    syncIntegration: (id: string) =>
+      req<{ jobId: string; status: string }>(`/integrations/${id}/sync`, {
+        method: "POST",
+        body: "{}",
+      }),
+    getSyncStatus: (id: string) =>
+      req<any>(`/integrations/${id}/sync/status`),
   };
 }
 

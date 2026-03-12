@@ -31,12 +31,34 @@ export interface ProjectSummaryResult {
   topFeature?: { title: string; priorityScore: number } | null;
 }
 
+export interface CodeContextResult {
+  modules: Array<{
+    moduleName: string;
+    filePath: string;
+    moduleType: string;
+    description: string;
+    relevanceScore: number;
+  }>;
+}
+
+export interface MetricsContextResult {
+  metrics: Array<{
+    metricName: string;
+    metricType: string;
+    value: number;
+    periodDate: string;
+    metadata?: Record<string, unknown>;
+  }>;
+}
+
 // Tool implementations injected from API layer (keeps packages/ai free of @repo/db)
 export interface ChatToolImplementations {
   getTopProblems: (projectId: string, limit: number) => Promise<ProblemResult[]>;
   getFeatureSuggestions: (projectId: string, limit: number) => Promise<FeatureResult[]>;
   getProblemEvidence: (problemId: string) => Promise<unknown>;
   getProjectSummary: (projectId: string) => Promise<ProjectSummaryResult>;
+  getCodeContext: (projectId: string, query: string) => Promise<CodeContextResult>;
+  getProductMetrics: (projectId: string) => Promise<MetricsContextResult>;
 }
 
 export interface ChatHistoryMessage {
@@ -142,6 +164,40 @@ export async function runChatAgent(params: RunChatAgentParams): Promise<ChatAgen
     }
   );
 
+  const getCodeContextTool = tool(
+    async ({ query }: { query: string }) => {
+      const result = await tools.getCodeContext(projectId, query);
+      toolCalls.push({ tool: "getCodeContext", result });
+      return JSON.stringify(result);
+    },
+    {
+      name: "getCodeContext",
+      description:
+        "Returns relevant code modules (files, services, components) from the connected GitHub repository that relate to a query. Use when discussing feature implementation, asking which code areas are affected, or understanding the technical side of a problem.",
+      schema: z.object({
+        query: z
+          .string()
+          .describe(
+            "Search query describing the feature, problem, or technical area to look up"
+          ),
+      }),
+    }
+  );
+
+  const getProductMetricsTool = tool(
+    async () => {
+      const result = await tools.getProductMetrics(projectId);
+      toolCalls.push({ tool: "getProductMetrics", result });
+      return JSON.stringify(result);
+    },
+    {
+      name: "getProductMetrics",
+      description:
+        "Returns product usage metrics from PostHog (page views, signups, sessions, feature usage, conversions) for the last 30 days. Use when user asks about product usage, analytics, drop rates, user behavior, or business impact.",
+      schema: z.object({}),
+    }
+  );
+
   const agent = createReactAgent({
     llm,
     tools: [
@@ -149,6 +205,8 @@ export async function runChatAgent(params: RunChatAgentParams): Promise<ChatAgen
       getFeatureSuggestionsTool,
       getProblemEvidenceTool,
       getProjectSummaryTool,
+      getCodeContextTool,
+      getProductMetricsTool,
     ],
     prompt: CHAT_AGENT_SYSTEM_PROMPT,
   });

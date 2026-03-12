@@ -1,5 +1,5 @@
 {
-  "name": "@repo/insight-engine",
+  "name": "@repo/context-engine",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",
@@ -8,9 +8,10 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@octokit/rest": "^21.0.0",
     "@repo/ai": "workspace:*",
-    "@repo/context-engine": "workspace:*",
-    "@repo/db": "workspace:*"
+    "@repo/db": "workspace:*",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

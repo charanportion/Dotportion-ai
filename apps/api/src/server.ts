@@ -7,6 +7,7 @@ import { analysisRoutes } from "./routes/analysis";
 import { insightRoutes } from "./routes/insights";
 import { featureRoutes } from "./routes/features";
 import { chatRoutes } from "./routes/chat";
+import { integrationRoutes } from "./routes/integrations";
 
 export function buildServer() {
   const app = Fastify({
@@ -34,6 +35,7 @@ export function buildServer() {
   app.register(insightRoutes);
   app.register(featureRoutes);
   app.register(chatRoutes);
+  app.register(integrationRoutes);
 
   // ─── Global error handler ─────────────────────────────────────────────────────
   app.setErrorHandler((error: Error, _, reply) => {

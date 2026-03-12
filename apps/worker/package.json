@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@repo/ai": "workspace:*",
+    "@repo/context-engine": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/insight-engine": "workspace:*",
     "bullmq": "^5.12.0",

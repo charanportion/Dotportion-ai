@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "@repo/db";
 import { runChatAgent, ChatToolImplementations } from "@repo/ai";
+import { getCodeContext, getProductMetrics } from "@repo/context-engine";
 import { requireAuth } from "../middleware/auth";
 
 const chatSchema = z.object({
@@ -73,6 +74,14 @@ function buildToolImplementations(): ChatToolImplementations {
           }),
         ]);
       return { signalCount, problemCount, featureCount, topFeature };
+    },
+
+    async getCodeContext(projectId, query) {
+      return getCodeContext(projectId, query);
+    },
+
+    async getProductMetrics(projectId) {
+      return getProductMetrics(projectId);
     },
   };
 }

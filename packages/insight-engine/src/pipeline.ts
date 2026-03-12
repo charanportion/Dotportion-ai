@@ -183,7 +183,9 @@ export async function runInsightPipeline(
       problemRecords.map((record, i) => ({
         problem: detectedProblems[i]!,
         problemId: record.id,
-      }))
+      })),
+      3,
+      projectId
     );
 
     const problemMap = new Map(

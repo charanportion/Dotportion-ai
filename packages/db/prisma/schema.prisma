@@ -41,12 +41,16 @@ model Project {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  signals      Signal[]
-  clusters     Cluster[]
-  problems     Problem[]
-  features     Feature[]
-  chatMessages ChatMessage[]
-  analyses     Analysis[]
+  signals            Signal[]
+  clusters           Cluster[]
+  problems           Problem[]
+  features           Feature[]
+  chatMessages       ChatMessage[]
+  analyses           Analysis[]
+  integrationConfigs IntegrationConfig[]
+  codeModules        CodeModule[]
+  productMetrics     ProductMetric[]
+  syncLogs           SyncLog[]
 
   @@index([userId])
   @@map("projects")
@@ -260,4 +264,100 @@ enum MessageRole {
   USER
   ASSISTANT
   TOOL
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTEGRATION CONFIG (per-project integration credentials + state)
+// ─────────────────────────────────────────────────────────────────────────────
+model IntegrationConfig {
+  id            String          @id @default(cuid())
+  type          IntegrationType
+  credentials   Json
+  isActive      Boolean         @default(true) @map("is_active")
+  lastSyncAt    DateTime?       @map("last_sync_at")
+  lastSyncError String?         @map("last_sync_error")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, type])
+  @@index([projectId])
+  @@map("integration_configs")
+}
+
+enum IntegrationType {
+  GITHUB
+  POSTHOG
+  SLACK
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CODE MODULE (from GitHub — files, functions, routes)
+// ─────────────────────────────────────────────────────────────────────────────
+model CodeModule {
+  id          String                      @id @default(cuid())
+  moduleName  String                      @map("module_name")
+  filePath    String                      @map("file_path")
+  moduleType  String                      @map("module_type")
+  description String
+  rawContent  String?                     @map("raw_content")
+  embedding   Unsupported("vector(768)")?
+  syncedAt    DateTime                    @default(now()) @map("synced_at")
+  createdAt   DateTime                    @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("code_modules")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRODUCT METRIC (from PostHog — snapshots of key events)
+// ─────────────────────────────────────────────────────────────────────────────
+model ProductMetric {
+  id          String   @id @default(cuid())
+  metricName  String   @map("metric_name")
+  metricType  String   @map("metric_type")
+  value       Float
+  periodDate  String   @map("period_date")
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, metricName, periodDate])
+  @@map("product_metrics")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SYNC LOG (audit trail for all integration sync runs)
+// ─────────────────────────────────────────────────────────────────────────────
+model SyncLog {
+  id              String          @id @default(cuid())
+  integrationType IntegrationType @map("integration_type")
+  status          SyncStatus      @default(PENDING)
+  itemsSynced     Int             @default(0) @map("items_synced")
+  error           String?
+  startedAt       DateTime?       @map("started_at")
+  completedAt     DateTime?       @map("completed_at")
+  createdAt       DateTime        @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, integrationType])
+  @@map("sync_logs")
+}
+
+enum SyncStatus {
+  PENDING
+  RUNNING
+  COMPLETE
+  ERROR
 }

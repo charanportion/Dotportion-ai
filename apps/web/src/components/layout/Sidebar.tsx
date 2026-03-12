@@ -12,6 +12,8 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const projectMatch = pathname.match(/\/projects\/([^/]+)/);
+  const activeProjectId = projectMatch?.[1];
 
   return (
     <aside className="w-56 min-h-screen border-r border-zinc-200 bg-white flex flex-col">
@@ -36,6 +38,27 @@ export function Sidebar() {
             {item.label}
           </Link>
         ))}
+
+        {activeProjectId && (
+          <>
+            <div className="pt-3 pb-1 px-3">
+              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                Project
+              </span>
+            </div>
+            <Link
+              href={`/projects/${activeProjectId}/settings`}
+              className={cn(
+                "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                pathname === `/projects/${activeProjectId}/settings`
+                  ? "bg-zinc-950 text-white"
+                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+              )}
+            >
+              Settings
+            </Link>
+          </>
+        )}
       </nav>
 
       {/* User */}
