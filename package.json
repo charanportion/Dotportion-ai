@@ -1,22 +1,21 @@
 {
-  "name": "dotportion-new",
+  "name": "product-intelligence-ai",
   "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore"
   },
   "devDependencies": {
-    "prettier": "^3.7.4",
-    "turbo": "^2.8.15",
-    "typescript": "5.9.2"
+    "turbo": "^2.0.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0"
   },
-  "engines": {
-    "node": ">=18"
-  },
-  "packageManager": "npm@11.7.0",
   "workspaces": [
     "apps/*",
     "packages/*"

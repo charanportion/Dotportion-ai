@@ -1,0 +1,263 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects     Project[]
+  chatMessages ChatMessage[]
+
+  @@index([clerkId])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROJECT
+// ─────────────────────────────────────────────────────────────────────────────
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(IDLE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  signals      Signal[]
+  clusters     Cluster[]
+  problems     Problem[]
+  features     Feature[]
+  chatMessages ChatMessage[]
+  analyses     Analysis[]
+
+  @@index([userId])
+  @@map("projects")
+}
+
+enum ProjectStatus {
+  IDLE
+  PROCESSING
+  COMPLETE
+  ERROR
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANALYSIS (tracks pipeline runs)
+// ─────────────────────────────────────────────────────────────────────────────
+model Analysis {
+  id          String         @id @default(cuid())
+  status      AnalysisStatus @default(PENDING)
+  jobId       String?
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+  @@map("analyses")
+}
+
+enum AnalysisStatus {
+  PENDING
+  EXTRACTING_SIGNALS
+  CLUSTERING
+  DETECTING_PROBLEMS
+  GENERATING_FEATURES
+  COMPLETE
+  ERROR
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SIGNAL (raw feedback)
+// ─────────────────────────────────────────────────────────────────────────────
+model Signal {
+  id          String       @id @default(cuid())
+  content     String
+  source      SignalSource @default(MANUAL)
+  sentiment   Float?
+  problem     String?
+  featureArea String?      @map("feature_area")
+  severity    String?
+  embedding   Unsupported("vector(768)")?
+  createdAt   DateTime     @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  clusterId String?
+  cluster   Cluster? @relation(fields: [clusterId], references: [id])
+
+  @@index([projectId])
+  @@index([clusterId])
+  @@map("signals")
+}
+
+enum SignalSource {
+  MANUAL
+  CSV
+  SUPPORT_TICKET
+  INTERVIEW
+  REVIEW
+  SLACK
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLUSTER (grouped signals)
+// ─────────────────────────────────────────────────────────────────────────────
+model Cluster {
+  id          String   @id @default(cuid())
+  name        String
+  signalCount Int      @default(0) @map("signal_count")
+  createdAt   DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  signals  Signal[]
+  problems Problem[]
+
+  @@index([projectId])
+  @@map("clusters")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROBLEM (detected from clusters)
+// ─────────────────────────────────────────────────────────────────────────────
+model Problem {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  severity      Float    @default(0)
+  evidenceCount Int      @default(0) @map("evidence_count")
+  reasoning     String?
+  createdAt     DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  clusterId String
+  cluster   Cluster @relation(fields: [clusterId], references: [id])
+
+  features Feature[]
+
+  @@index([projectId])
+  @@index([clusterId])
+  @@map("problems")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FEATURE (AI-suggested solution)
+// ─────────────────────────────────────────────────────────────────────────────
+model Feature {
+  id                 String   @id @default(cuid())
+  title              String
+  description        String
+  implementationIdea String?  @map("implementation_idea")
+  expectedImpact     String?  @map("expected_impact")
+  impactScore        Float    @default(0) @map("impact_score")
+  confidenceScore    Float    @default(0) @map("confidence_score")
+  effortScore        Float    @default(0) @map("effort_score")
+  priorityScore      Float    @default(0) @map("priority_score")
+  createdAt          DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  problemId String
+  problem   Problem @relation(fields: [problemId], references: [id])
+
+  tasks Task[]
+  prd   PRD?
+
+  @@index([projectId])
+  @@index([problemId])
+  @@index([priorityScore(sort: Desc)])
+  @@map("features")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRD (generated product document)
+// ─────────────────────────────────────────────────────────────────────────────
+model PRD {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  featureId String  @unique @map("feature_id")
+  feature   Feature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@map("prds")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TASK (engineering tasks from PRD)
+// ─────────────────────────────────────────────────────────────────────────────
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+
+  featureId String  @map("feature_id")
+  feature   Feature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@index([featureId])
+  @@map("tasks")
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHAT MESSAGE
+// ─────────────────────────────────────────────────────────────────────────────
+model ChatMessage {
+  id        String      @id @default(cuid())
+  role      MessageRole
+  content   String
+  toolCalls Json?       @map("tool_calls")
+  createdAt DateTime    @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([projectId])
+  @@index([userId])
+  @@map("chat_messages")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  TOOL
+}

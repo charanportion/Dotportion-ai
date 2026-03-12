@@ -1,0 +1,20 @@
+{
+    "mcpServers":{
+      "neon": {
+      "type": "http",
+      "url": "https://mcp.neon.tech/mcp"
+    },
+     "shadcn": {
+  "command": "cmd",
+  "args": ["/c", "npx", "shadcn@latest", "mcp"]
+},
+"next-devtools": {
+  "command": "cmd",
+  "args": ["/c", "npx", "-y", "next-devtools-mcp@latest"]
+},
+    "clerk": {
+        "type": "http",
+      "url": "https://mcp.clerk.com/mcp"
+    }
+    }
+}

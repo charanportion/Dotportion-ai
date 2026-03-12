@@ -1,0 +1,60 @@
+"id","content","createdAt","updatedAt","feature_id"
+"cmmlp5hp0000ndajwczyo7vyh","# Auto-Save Drafts on Tab/Window Blur
+
+## Problem Statement
+Users frequently lose their work in the editor when navigating away from the browser tab or window. This leads to significant frustration and wasted time as they are forced to re-enter content. The provided user report, ""The editor keeps losing my work when I switch tabs. I've lost the same paragraph three times today. Super frustrating,"" directly highlights this pain point, indicating a critical need to persist user input automatically.
+
+## User Story
+As an **editor user**, I want **my current draft to be automatically saved** whenever I switch away from the editor tab or window, so that **I never lose my work and can easily resume editing without re-entering content.**
+
+## Solution Overview
+This feature will automatically save the current content of the active editor as a draft whenever the browser tab or window containing the editor loses focus (i.e., `blur` event). This ensures that user input is continuously preserved, preventing data loss and allowing users to seamlessly resume their work upon returning to the editor. The draft will be stored locally and/or on the server, depending on existing infrastructure, and will be loaded automatically when the user revisits the editor.
+
+## User Flow
+
+1.  **User starts editing:** The user opens the editor and begins typing content.
+2.  **User navigates away:** The user switches to another browser tab, minimizes the browser window, or clicks outside the browser window.
+3.  **System detects blur:** The editor's browser tab/window fires a `blur` event.
+4.  **Auto-save initiated:** Upon detection of the `blur` event, the system automatically triggers a save operation for the current editor content.
+5.  **Draft stored:** The editor content is saved as a draft (e.g., to local storage or a server-side draft mechanism).
+6.  **User returns:** The user navigates back to the editor tab or restores the browser window.
+7.  **Editor re-focuses:** The editor's browser tab/window fires a `focus` event.
+8.  **Draft loaded (if applicable):** If the editor was previously empty or no other content was explicitly loaded, the system checks for and loads the most recent auto-saved draft.
+9.  **User resumes editing:** The user sees their previously entered content and can continue working from where they left off.
+
+## Edge Cases
+
+*   **Empty editor:** What happens if the user switches away from an empty editor? Should an empty draft be saved, or should the auto-save be skipped? (Decision: Skip saving if editor content is empty or only whitespace).
+*   **Existing saved content:** If the user is editing an already saved document, should the auto-save overwrite the *saved* version or create a *draft* associated with that document? (Decision: Always create/update a *draft* version, not overwrite the explicitly saved version, until the user manually saves or publishes).
+*   **Network connectivity:** If there's no network connection for server-side saving, should it fall back to local storage, or should it fail silently? (Decision: Attempt server save, if fail, attempt local storage save with appropriate user notification if local storage also fails or is full).
+*   **Multiple editor tabs:** If a user has multiple editor tabs open, how does auto-save behave? (Decision: Each editor instance should manage its own auto-save independently based on its specific `blur` event).
+*   **Draft conflicts:** What if a user has an auto-saved draft, but then opens the editor from another device/browser? (Decision: The most recent draft for that specific document/context should take precedence. Consider a ""restore from draft"" prompt if a newer server-side draft exists than the local one).
+*   **User explicitly closes tab/window:** If the user closes the tab/window *without* switching away first, does the auto-save still trigger? (Decision: No, `beforeunload` event is for explicit close, `blur` is for loss of focus. This feature specifically targets blur).
+*   **Browser/OS restrictions:** Some browsers or OS configurations might restrict JavaScript `blur`/`focus` events in certain scenarios.
+*   **Large content:** Performance considerations for saving very large amounts of text.
+*   **User clears cache/local storage:** How does this impact locally stored drafts? (Decision: User-initiated cache clearing will remove local drafts; not something the feature can prevent).
+
+## Success Metrics
+
+1.  **Reduced `lost_work_reports`:** A 50% reduction in user reports related to lost work due to tab/window switches within 1 month post-launch.
+2.  **Increased `session_duration_with_draft_recovery`:** A 15% increase in average editor session duration for users who utilize the auto-save recovery feature, indicating successful work resumption.
+3.  **`draft_save_event_success_rate`:** Maintain a 99.5% success rate for auto-save operations (either server-side or local storage) as measured by internal logging.
+
+## Engineering Tasks
+
+*   [ ] **Research:** Investigate optimal browser event listeners for tab/window blur (`window.onblur`, `document.hidden` with `visibilitychange`).
+*   [ ] **Frontend: Implement `blur` event listener:** Add an event listener to the editor component or window that triggers a save function when the editor or its containing tab/window loses focus.
+*   [ ] **Frontend: Implement `focus` event listener:** Add an event listener to load a draft when the editor or its containing tab/window gains focus, *if* applicable (e.g., on initial load or if the editor was previously empty).
+*   [ ] **Frontend: Draft content extraction:** Create a function to reliably extract the current content from the editor instance (e.g., rich text HTML, Markdown, plain text).
+*   [ ] **Frontend: Local storage mechanism:** Implement logic to save the extracted content to `localStorage` with a unique key per editor/document context.
+*   [ ] **Frontend: Local storage retrieval:** Implement logic to retrieve the content from `localStorage` on editor load/focus.
+*   [ ] **Frontend: Empty content check:** Add a check to prevent saving empty or whitespace-only drafts.
+*   [ ] **Backend (if applicable): Draft API endpoint:** Create or utilize an existing API endpoint for saving user drafts to the server, associated with a user ID and document ID/context.
+*   [ ] **Backend (if applicable): Draft retrieval API endpoint:** Create or utilize an existing API endpoint for retrieving the most recent draft for a given user/document context.
+*   [ ] **Backend (if applicable): Draft cleanup/retention policy:** Define and implement a policy for how long server-side drafts are kept (e.g., 30 days, or until explicitly saved/published).
+*   [ ] **Integration: Server-side fallback:** If a server-side draft mechanism exists, integrate the frontend to attempt server-side save first, falling back to local storage on network failure.
+*   [ ] **Integration: Draft conflict resolution:** Implement logic to handle scenarios where a local draft might be older than a server-side draft, potentially prompting the user.
+*   [ ] **UI/UX: Subtle save indicator (optional):** Consider a small, temporary UI element (e.g., ""Draft saved"") to confirm the auto-save, if deemed necessary for user confidence.
+*   [ ] **Testing: Unit tests:** Write unit tests for draft saving, retrieval, and edge case handling.
+*   [ ] **Testing: Integration tests:** Write integration tests to simulate user flow across tab/window switches.
+*   [ ] **Logging & Monitoring:** Implement logging for auto-save success/failure events and draft recovery events to track success metrics.","2026-03-11 07:07:37.813","2026-03-11 07:07:37.813","cmmloeq7v002910krs6vue9h1"
