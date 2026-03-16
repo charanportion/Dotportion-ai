@@ -31,6 +31,14 @@ export async function insightRoutes(app: FastifyInstance) {
             orderBy: { priorityScore: "desc" },
             take: 1,
           },
+          cluster: {
+            include: {
+              signals: {
+                take: 3,
+                select: { id: true, content: true, source: true },
+              },
+            },
+          },
         },
       });
 

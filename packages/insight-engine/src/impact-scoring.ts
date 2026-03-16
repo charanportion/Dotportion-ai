@@ -40,15 +40,16 @@ async function estimateEffort(
  * Calculate RICE-based priority score
  *
  * Formula: priority = (severity × normalizedEvidence × confidence) / effort
- * where normalizedEvidence = evidenceCount / 100 (capped at 1.0)
+ * where normalizedEvidence = evidenceCount / totalSignals (capped at 1.0)
  */
 function calculatePriorityScore(
   severity: number,
   evidenceCount: number,
   confidenceScore: number,
-  effortScore: number
+  effortScore: number,
+  totalSignals: number
 ): number {
-  const normalizedEvidence = Math.min(1.0, evidenceCount / 100);
+  const normalizedEvidence = Math.min(1.0, evidenceCount / Math.max(1, totalSignals));
   const priority =
     (severity * normalizedEvidence * confidenceScore) / effortScore;
   return Math.round(priority * 100) / 100; // round to 2 decimal places
@@ -59,16 +60,19 @@ function calculatePriorityScore(
  */
 export async function scoreFeature(
   feature: GeneratedFeature,
-  problem: DetectedProblem
+  problem: DetectedProblem,
+  totalSignals: number
 ): Promise<ScoredFeature> {
   const { effortScore, confidenceScore } = await estimateEffort(feature);
 
-  const impactScore = problem.severity * Math.min(1.0, problem.evidenceCount / 100);
+  const normalizedEvidence = Math.min(1.0, problem.evidenceCount / Math.max(1, totalSignals));
+  const impactScore = problem.severity * normalizedEvidence;
   const priorityScore = calculatePriorityScore(
     problem.severity,
     problem.evidenceCount,
     confidenceScore,
-    effortScore
+    effortScore,
+    totalSignals
   );
 
   return {
@@ -88,14 +92,15 @@ export async function scoreAndRankFeatures(
     feature: GeneratedFeature;
     problem: DetectedProblem;
   }>,
-  concurrency = 3
+  concurrency = 3,
+  totalSignals = 100
 ): Promise<ScoredFeature[]> {
   const scored: ScoredFeature[] = [];
 
   for (let i = 0; i < featureProblems.length; i += concurrency) {
     const batch = featureProblems.slice(i, i + concurrency);
     const batchResults = await Promise.all(
-      batch.map(({ feature, problem }) => scoreFeature(feature, problem))
+      batch.map(({ feature, problem }) => scoreFeature(feature, problem, totalSignals))
     );
     scored.push(...batchResults);
   }

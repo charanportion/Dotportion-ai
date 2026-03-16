@@ -1,0 +1,478 @@
+# Product Intelligence Platform
+
+## AI Copilot for Product Teams
+
+---
+
+# 1. Vision
+
+The goal of this product is to build an **AI-native Product Intelligence Platform** that acts as an **autonomous assistant for product teams**.
+
+The system continuously analyzes signals from multiple product development sources and automatically identifies:
+
+- product issues
+- growth opportunities
+- UX problems
+- feature requests
+- regressions
+- bugs
+- engineering risks
+
+Instead of product managers manually reviewing dashboards, tickets, commits, and feedback, the system proactively identifies important insights and suggests actions.
+
+The system must behave like a **smart product analyst + PM assistant** that continuously monitors product health and suggests what should be fixed or improved.
+
+---
+
+# 2. Core Product Philosophy
+
+The product must follow these principles:
+
+1. **Integration-first**
+   Users should not manually input data. Instead they connect their existing tools.
+
+2. **AI-driven analysis**
+   The system should automatically analyze signals and detect patterns.
+
+3. **Proactive insights**
+   Insights should appear automatically without users needing to ask.
+
+4. **Conversational workflow**
+   Users should be able to chat with AI to brainstorm and generate product decisions.
+
+5. **Actionable output**
+   Every insight should lead to actions such as:
+   - creating issues
+   - generating PRDs
+   - saving feature ideas
+   - prioritizing roadmap items
+
+---
+
+# 3. Target Users
+
+Primary users:
+
+Product managers
+Startup founders
+Engineering managers
+Growth teams
+Product analysts
+
+These users typically use tools such as:
+
+- GitHub
+- PostHog
+- Jira
+- Linear
+- Slack
+- Figma
+
+The platform should integrate with these tools and build intelligence on top of them.
+
+---
+
+# 4. End Goal
+
+The long-term goal is to build a **Product Intelligence Engine** that continuously answers:
+
+- What is wrong with the product?
+- What should we fix next?
+- What features should we build?
+- What metrics are declining?
+- What are users complaining about?
+- What is blocking product growth?
+
+The system should automatically detect these and notify the team.
+
+---
+
+# 5. Core Capabilities
+
+The platform must support five core capabilities.
+
+1. Tool integrations
+2. Product signal ingestion
+3. AI analysis engine
+4. Insight generation
+5. Conversational AI assistant
+
+---
+
+# 6. System Architecture
+
+The architecture must contain the following layers.
+
+## 6.1 Integration Layer
+
+This layer connects external tools and ingests events.
+
+Supported integrations:
+
+GitHub
+PostHog
+Jira
+Linear
+Slack
+Figma
+
+Each integration must support:
+
+OAuth authentication
+Webhook ingestion
+Periodic sync jobs
+
+Example GitHub events:
+
+commit
+pull request created
+pull request merged
+issue created
+deployment
+
+Example PostHog events:
+
+product events
+funnel metrics
+retention metrics
+feature usage
+
+Example Jira/Linear events:
+
+new issue
+status change
+comment added
+
+Example Slack events:
+
+support complaints
+bug reports
+feature discussions
+
+Example Figma events:
+
+design updates
+component modifications
+
+All events must be normalized into a common schema.
+
+---
+
+# 7. Event Normalization
+
+All ingested signals should be converted into a unified event structure.
+
+Event schema:
+
+event_id
+source
+event_type
+entity_type
+entity_id
+user
+metadata
+timestamp
+
+Example:
+
+event_type = pull_request_merged
+entity_type = repository
+entity_id = backend-api
+
+Example:
+
+event_type = funnel_drop
+entity_type = onboarding_flow
+
+---
+
+# 8. Data Storage
+
+The system requires multiple storage systems.
+
+Operational database:
+PostgreSQL
+
+Vector database:
+for embeddings of documents, issues, feedback, conversations
+
+Object storage:
+screenshots and attachments
+
+Event store:
+product events and signals
+
+---
+
+# 9. AI Analysis Engine
+
+The AI engine continuously analyzes incoming signals.
+
+Responsibilities:
+
+detect anomalies
+identify correlations
+cluster feedback
+summarize discussions
+generate insights
+
+The engine must support:
+
+scheduled analysis jobs
+real-time analysis triggered by events
+
+Example analysis:
+
+If retention drops and a commit was deployed recently, AI should highlight that correlation.
+
+---
+
+# 10. Insight Generation
+
+Insights are the most important output of the system.
+
+An insight is a structured object.
+
+Insight schema:
+
+title
+description
+evidence
+confidence_score
+impact_estimate
+recommended_actions
+related_entities
+
+Example insight:
+
+Title:
+Activation dropped 12% in onboarding
+
+Evidence:
+PostHog funnel analysis
+
+Related entities:
+commit 82f3a
+onboarding page
+
+Recommended actions:
+simplify step 3
+remove phone verification
+
+---
+
+# 11. Product Health Feed
+
+The main dashboard of the application must be a **Product Health Feed**.
+
+This feed displays the most important insights generated by the AI engine.
+
+Each insight card should include:
+
+title
+summary
+supporting data
+confidence score
+actions
+
+Possible actions:
+
+create Jira ticket
+create Linear issue
+open GitHub issue
+generate PRD
+save feature idea
+
+---
+
+# 12. Conversational AI Assistant
+
+The platform must include a conversational AI assistant.
+
+Users can ask questions such as:
+
+Why did activation drop this week?
+
+What features should we prioritize?
+
+Summarize the top user complaints.
+
+The assistant must have access to:
+
+integrated tools
+historical insights
+feedback database
+product metrics
+
+The assistant should generate actionable responses.
+
+---
+
+# 13. Brainstorming with AI
+
+Users should be able to brainstorm product ideas with AI.
+
+Example conversation:
+
+User:
+How can we improve onboarding conversion?
+
+AI:
+suggest improvements
+generate hypotheses
+propose experiments
+
+Users should be able to convert ideas into structured artifacts.
+
+Artifacts include:
+
+feature ideas
+PRDs
+tickets
+experiments
+
+---
+
+# 14. Idea Capture System
+
+Users must be able to save ideas generated during AI conversations.
+
+Idea schema:
+
+title
+description
+origin
+impact_estimate
+effort_estimate
+status
+
+Ideas should appear in an **Idea Board**.
+
+---
+
+# 15. Feedback Collection
+
+The platform must provide a feedback widget.
+
+Developers can embed this widget inside their product.
+
+The widget captures:
+
+user message
+page URL
+screenshot
+session data
+
+Feedback should be automatically analyzed by AI.
+
+Tasks:
+
+categorize feedback
+cluster similar issues
+detect common problems
+
+---
+
+# 16. Feedback to Issue Automation
+
+When feedback clusters indicate bugs or feature requests, the system should suggest creating issues automatically.
+
+Possible actions:
+
+create Jira ticket
+create Linear issue
+create GitHub issue
+
+---
+
+# 17. Prioritization Engine
+
+The system must automatically prioritize problems and ideas.
+
+Factors:
+
+number of affected users
+metric impact
+frequency of complaints
+engineering effort estimate
+
+Each issue receives a priority score.
+
+---
+
+# 18. Notifications
+
+Users should receive notifications when critical insights are detected.
+
+Channels:
+
+in-app alerts
+Slack notifications
+email digests
+
+---
+
+# 19. Security
+
+The system must follow strict security practices.
+
+OAuth for integrations
+encrypted secrets
+role-based access control
+audit logs
+
+---
+
+# 20. User Interface
+
+The application should contain the following pages.
+
+Dashboard
+Insights feed
+Integrations
+AI assistant
+Ideas board
+Feedback management
+
+---
+
+# 21. Expected Behavior
+
+The AI should never generate vague insights.
+
+Each insight must include evidence.
+
+Insights should be ranked by importance.
+
+The system must avoid overwhelming users with low value alerts.
+
+---
+
+# 22. Final Product Outcome
+
+When the system is working correctly:
+
+Users connect their tools.
+
+The AI continuously analyzes signals.
+
+The platform automatically surfaces:
+
+product problems
+growth opportunities
+user complaints
+engineering risks
+
+Users can collaborate with the AI to fix issues and plan improvements.
+
+---
+
+# 23. Definition of Success
+
+The platform succeeds when users rely on it daily to understand:
+
+what is happening in their product
+what needs to be fixed
+what should be built next
+
+The system becomes the **central intelligence layer for product teams**.

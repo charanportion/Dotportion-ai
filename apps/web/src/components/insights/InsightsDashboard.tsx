@@ -67,6 +67,20 @@ export default function InsightsDashboard({ projectId }: { projectId: string }) 
         <h1 className="text-2xl font-bold text-zinc-950">Insights</h1>
       </div>
 
+      {/* No analysis yet — full-page CTA */}
+      {!problemsLoading && !featuresLoading && problems.length === 0 && features.length === 0 && (
+        <div className="border border-zinc-200 rounded-lg p-12 text-center mb-8">
+          <p className="text-sm font-semibold text-zinc-950 mb-1">No analysis yet</p>
+          <p className="text-sm text-zinc-500 mb-6">Upload customer feedback to detect problems and generate feature suggestions.</p>
+          <Link
+            href={`/projects/${projectId}/upload`}
+            className="bg-zinc-950 text-white text-sm px-4 py-2 rounded-md hover:bg-zinc-800"
+          >
+            Upload feedback
+          </Link>
+        </div>
+      )}
+
       {/* Charts row */}
       {!problemsLoading && problems.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -177,8 +191,6 @@ export default function InsightsDashboard({ projectId }: { projectId: string }) 
 }
 
 function ProblemCard({ problem, rank }: { problem: any; rank: number }) {
-  const maxEvidence = 100;
-  const pct = Math.min(100, (problem.evidenceCount / maxEvidence) * 100);
   const topFeature = problem.features?.[0];
 
   return (
@@ -207,6 +219,20 @@ function ProblemCard({ problem, rank }: { problem: any; rank: number }) {
           {problem.severity.toFixed(1)}/10
         </span>
       </div>
+
+      {/* Signal evidence */}
+      {problem.cluster?.signals?.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-zinc-100">
+          <div className="text-xs text-zinc-400 uppercase tracking-wider mb-2">Signal evidence</div>
+          <div className="space-y-1.5">
+            {problem.cluster.signals.map((signal: any) => (
+              <p key={signal.id} className="text-xs text-zinc-500 line-clamp-2 pl-2 border-l border-zinc-200">
+                {signal.content}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Suggested fix */}
       {topFeature && (

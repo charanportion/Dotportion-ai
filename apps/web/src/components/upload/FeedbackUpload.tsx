@@ -26,6 +26,27 @@ const STAGE_LABELS = [
   "Generating features",
 ];
 
+const SAMPLE_FEEDBACK = `The CSV import is really confusing, I can't figure out which column maps to what
+Export takes forever, waited 10 minutes for a simple spreadsheet download
+Can't find where the integration settings are, they're buried too deep
+Onboarding was unclear, I had no idea what to do first
+App crashed when I tried to upload a file larger than 5MB
+The search doesn't work properly, it misses obvious results
+Please add keyboard shortcuts, I have to click everything with my mouse
+The dashboard loads really slowly on my laptop
+Can't delete old projects, they just pile up
+Need bulk actions for managing multiple items at once
+Mobile version is nearly unusable, everything is tiny and hard to tap
+Would love dark mode, my eyes hurt at night
+Notifications are way too aggressive, I keep having to dismiss them
+Two-factor authentication keeps failing for me
+The API docs are outdated, some endpoints don't work as described
+I want to export my data as PDF, not just CSV
+Can't invite teammates without them seeing all my private projects
+The undo feature doesn't work after bulk deletions
+Filter options are too limited, I need more advanced search
+Please add a Slack integration so I get updates in our workspace`.trim();
+
 function parseCSV(text: string): string[] {
   return text
     .split("\n")
@@ -300,10 +321,19 @@ export default function FeedbackUpload({ projectId }: { projectId: string }) {
       {mode === "text" ? (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1.5">
-              Paste feedback
-              <span className="text-zinc-400 font-normal ml-1">(one item per line)</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium text-zinc-700">
+                Paste feedback
+                <span className="text-zinc-400 font-normal ml-1">(one item per line)</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setText(SAMPLE_FEEDBACK)}
+                className="text-xs text-zinc-400 hover:text-zinc-700 underline underline-offset-2"
+              >
+                Load sample data
+              </button>
+            </div>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}

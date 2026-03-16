@@ -1,7 +1,7 @@
 import type { SignalWithEmbedding, RawCluster, NamedCluster } from "./types";
 import { nameCluster } from "./signal-extractor";
 
-const SIMILARITY_THRESHOLD = 0.78;
+const SIMILARITY_THRESHOLD = 0.72;
 
 /**
  * Compute cosine similarity between two vectors

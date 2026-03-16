@@ -32,7 +32,10 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
   if (!project) return null;
 
   const latestAnalysis = project.analyses?.[0];
-  const hasInsights = project.status === "COMPLETE";
+  const hasInsights =
+    latestAnalysis?.status === "COMPLETE" || (project._count?.problems ?? 0) > 0;
+  const isProcessing = ["PENDING", "EXTRACTING_SIGNALS", "CLUSTERING", "DETECTING_PROBLEMS", "GENERATING_FEATURES"]
+    .includes(latestAnalysis?.status ?? "");
 
   return (
     <div className="p-8">
@@ -97,7 +100,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
       </div>
 
       {/* Analysis status */}
-      {project.status === "PROCESSING" && latestAnalysis && (
+      {isProcessing && latestAnalysis && (
         <AnalysisProgress
           projectId={projectId}
           analysisId={latestAnalysis.id}

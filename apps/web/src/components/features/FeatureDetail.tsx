@@ -6,9 +6,74 @@ import { useState } from "react";
 import Link from "next/link";
 import { createAPIClient } from "@/lib/api";
 
+function MarkdownPRD({ content }: { content: string }) {
+  const lines = content.split("\n");
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (line.startsWith("# ")) {
+      elements.push(<h1 key={i} className="text-lg font-bold text-zinc-950 mt-6 mb-2 first:mt-0">{line.slice(2)}</h1>);
+    } else if (line.startsWith("## ")) {
+      elements.push(<h2 key={i} className="text-base font-semibold text-zinc-950 mt-5 mb-2">{line.slice(3)}</h2>);
+    } else if (line.startsWith("### ")) {
+      elements.push(<h3 key={i} className="text-sm font-semibold text-zinc-700 mt-4 mb-1.5">{line.slice(4)}</h3>);
+    } else if (line.startsWith("- ") || line.startsWith("* ")) {
+      const items: string[] = [];
+      while (i < lines.length && (lines[i].startsWith("- ") || lines[i].startsWith("* "))) {
+        items.push(lines[i].slice(2));
+        i++;
+      }
+      elements.push(
+        <ul key={`ul-${i}`} className="list-disc pl-5 space-y-1 mb-3">
+          {items.map((item, j) => <li key={j} className="text-sm text-zinc-700">{renderInline(item)}</li>)}
+        </ul>
+      );
+      continue;
+    } else if (/^\d+\. /.test(line)) {
+      const items: string[] = [];
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        items.push(lines[i].replace(/^\d+\. /, ""));
+        i++;
+      }
+      elements.push(
+        <ol key={`ol-${i}`} className="list-decimal pl-5 space-y-1 mb-3">
+          {items.map((item, j) => <li key={j} className="text-sm text-zinc-700">{renderInline(item)}</li>)}
+        </ol>
+      );
+      continue;
+    } else if (line.startsWith("---") || line.startsWith("***")) {
+      elements.push(<hr key={i} className="border-zinc-200 my-4" />);
+    } else if (line.trim() === "") {
+      elements.push(<div key={i} className="h-2" />);
+    } else {
+      elements.push(<p key={i} className="text-sm text-zinc-700 mb-2 leading-relaxed">{renderInline(line)}</p>);
+    }
+    i++;
+  }
+
+  return <div className="prose-zinc">{elements}</div>;
+}
+
+function renderInline(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i} className="font-semibold text-zinc-950">{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code key={i} className="font-mono text-xs bg-zinc-100 px-1 py-0.5 rounded">{part.slice(1, -1)}</code>;
+    }
+    return part;
+  });
+}
+
 export default function FeatureDetail({ featureId }: { featureId: string }) {
   const { getToken } = useAuth();
   const [generatingPRD, setGeneratingPRD] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { data, isLoading, mutate } = useSWR(
     `feature-${featureId}`,
@@ -114,22 +179,34 @@ export default function FeatureDetail({ featureId }: { featureId: string }) {
       <div className="border border-zinc-200 rounded-lg">
         <div className="flex items-center justify-between p-5 border-b border-zinc-200">
           <h3 className="text-sm font-semibold text-zinc-950">Product Requirements Document</h3>
-          {!feature.prd && (
-            <button
-              onClick={handleGeneratePRD}
-              disabled={generatingPRD}
-              className="bg-zinc-950 text-white text-xs px-3 py-1.5 rounded-md hover:bg-zinc-800 disabled:opacity-50"
-            >
-              {generatingPRD ? "Generating..." : "Generate PRD"}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {feature.prd && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(feature.prd.content);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="border border-zinc-200 text-zinc-600 text-xs px-3 py-1.5 rounded-md hover:bg-zinc-50"
+              >
+                {copied ? "Copied!" : "Copy markdown"}
+              </button>
+            )}
+            {!feature.prd && (
+              <button
+                onClick={handleGeneratePRD}
+                disabled={generatingPRD}
+                className="bg-zinc-950 text-white text-xs px-3 py-1.5 rounded-md hover:bg-zinc-800 disabled:opacity-50"
+              >
+                {generatingPRD ? "Generating..." : "Generate PRD"}
+              </button>
+            )}
+          </div>
         </div>
 
         {feature.prd ? (
           <div className="p-6">
-            <pre className="text-sm text-zinc-700 whitespace-pre-wrap font-mono leading-relaxed">
-              {feature.prd.content}
-            </pre>
+            <MarkdownPRD content={feature.prd.content} />
           </div>
         ) : (
           <div className="p-8 text-center">

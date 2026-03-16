@@ -5,6 +5,7 @@ import { clusterSignals } from "./cluster-engine";
 import { detectProblems } from "./problem-detector";
 import { generateFeatures } from "./feature-generator";
 import { scoreAndRankFeatures } from "./impact-scoring";
+import { generatePRD } from "./prd-generator";
 import type { SignalWithEmbedding, PipelineResult } from "./types";
 
 type RawSignal = { id: string; content: string };
@@ -197,11 +198,13 @@ export async function runInsightPipeline(
         .map((feature) => ({
           feature,
           problem: problemMap.get(feature.problemId)!,
-        }))
+        })),
+      3,
+      rawSignals.length
     );
 
     // Store features in DB
-    await Promise.all(
+    const featureRecords = await Promise.all(
       scoredFeatures.map((feature) =>
         prisma.feature.create({
           data: {
@@ -219,6 +222,35 @@ export async function runInsightPipeline(
         })
       )
     );
+
+    // ─── Stage 6: Generate PRDs + Extract Tasks ────────────────────────────────
+    const concurrency = 3;
+    for (let i = 0; i < featureRecords.length; i += concurrency) {
+      const batch = featureRecords.slice(i, i + concurrency);
+      await Promise.all(
+        batch.map(async (featureRecord, batchIdx) => {
+          const scoredFeature = scoredFeatures[i + batchIdx]!;
+          const detectedProblem = problemMap.get(featureRecord.problemId);
+          if (!detectedProblem) return;
+
+          try {
+            const { content, tasks: taskTitles } = await generatePRD(scoredFeature, detectedProblem);
+
+            await prisma.pRD.create({
+              data: { content, featureId: featureRecord.id },
+            });
+
+            if (taskTitles.length > 0) {
+              await prisma.task.createMany({
+                data: taskTitles.map((title) => ({ title, featureId: featureRecord.id })),
+              });
+            }
+          } catch {
+            // Non-fatal: PRD generation failure shouldn't block pipeline completion
+          }
+        })
+      );
+    }
 
     // ─── Complete ─────────────────────────────────────────────────────────────
     await prisma.analysis.update({

@@ -55,17 +55,50 @@ export default function ProjectsList() {
 
   if (projects.length === 0) {
     return (
-      <div className="border border-zinc-200 rounded-lg p-12 text-center">
-        <h3 className="font-semibold text-zinc-950 mb-2">No projects yet</h3>
-        <p className="text-sm text-zinc-500 mb-6">
-          Create a project to start analyzing customer feedback.
-        </p>
-        <Link
-          href="/projects/new"
-          className="bg-zinc-950 text-white text-sm px-4 py-2 rounded-md hover:bg-zinc-800"
-        >
-          Create first project
-        </Link>
+      <div className="border border-zinc-200 rounded-lg p-12">
+        <div className="max-w-lg mx-auto">
+          <h3 className="font-bold text-zinc-950 text-lg mb-1">Turn customer feedback into product decisions</h3>
+          <p className="text-sm text-zinc-500 mb-10">
+            Upload messy feedback — AI detects the real problems, suggests the right features, and writes the PRD for you.
+          </p>
+
+          <div className="space-y-6 mb-10">
+            {[
+              {
+                step: "1",
+                title: "Create a project",
+                desc: "Give it a name — your product, a feature area, or a research sprint.",
+              },
+              {
+                step: "2",
+                title: "Upload customer feedback",
+                desc: "Paste raw feedback or upload a CSV. Use our sample data to try it instantly.",
+              },
+              {
+                step: "3",
+                title: "Get problems, features, and PRDs",
+                desc: "AI groups the feedback, surfaces the top problems, suggests features with impact scores, and generates a full PRD.",
+              },
+            ].map((item) => (
+              <div key={item.step} className="flex gap-4">
+                <div className="w-7 h-7 rounded-full border border-zinc-200 flex items-center justify-center shrink-0 font-mono text-xs text-zinc-500">
+                  {item.step}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-950 mb-0.5">{item.title}</p>
+                  <p className="text-sm text-zinc-500">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Link
+            href="/projects/new"
+            className="inline-block bg-zinc-950 text-white text-sm px-5 py-2.5 rounded-md hover:bg-zinc-800 font-medium"
+          >
+            Create your first project →
+          </Link>
+        </div>
       </div>
     );
   }
